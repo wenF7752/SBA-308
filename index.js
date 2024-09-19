@@ -2,8 +2,11 @@
  *  Wen Fang
  *  09/19/2024
  */
-
+// Helper functions
 const log = console.log;
+//get the total score in percentage
+const average = (scores, total) => (total === 0 ? 0 : scores / total);
+// log(average(200, 400));
 // Dummy data
 // The provided course information.
 const CourseInfo = {
@@ -82,3 +85,31 @@ const LearnerSubmissions = [
     },
   },
 ];
+
+function getLearnerData(CourseInfo, AssignmentGroup, LearnerSubmissions) {
+  //   log(AssignmentGroup.assignments[0].points_possible);
+  //get the learner ID
+  let learnerData = [];
+  LearnerSubmissions.forEach((learner) => {
+    let currentLearner = {};
+    const leanerID = learner.learner_id;
+    const assignmentID = learner.assignment_id;
+    const submissionScore = learner.submission.score;
+    const submissionDate = learner.submission.submitted_at;
+    const assignmentPossibleScore = AssignmentGroup.assignments.find(
+      (assignment) => assignment.id === assignmentID
+    ).points_possible;
+    const assignmentDueDate = AssignmentGroup.assignments.find(
+      (assignment) => assignment.id === assignmentID
+    ).due_at;
+
+    learnerData.push({
+      leaner_id: learner.learner_id,
+      assignment_id: learner.assignment_id,
+      avg: 2,
+    });
+  });
+  return learnerData;
+}
+
+log(getLearnerData(CourseInfo, AssignmentGroup, LearnerSubmissions));
