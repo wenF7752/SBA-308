@@ -90,25 +90,42 @@ function getLearnerData(CourseInfo, AssignmentGroup, LearnerSubmissions) {
   //   log(AssignmentGroup.assignments[0].points_possible);
   //get the learner ID
   let learnerData = [];
+
   LearnerSubmissions.forEach((learner) => {
+    //check if the learner is already in the learnerData
+    const includeId = learnerData.some(
+      (data) => data.id === learner.learner_id
+    );
     let currentLearner = {};
+    //get all the data needed for the leaner
     const leanerID = learner.learner_id;
     const assignmentID = learner.assignment_id;
     const submissionScore = learner.submission.score;
-    const submissionDate = learner.submission.submitted_at;
     const assignmentPossibleScore = AssignmentGroup.assignments.find(
       (assignment) => assignment.id === assignmentID
     ).points_possible;
+    const submissionDate = learner.submission.submitted_at;
     const assignmentDueDate = AssignmentGroup.assignments.find(
       (assignment) => assignment.id === assignmentID
     ).due_at;
-
-    learnerData.push({
-      leaner_id: learner.learner_id,
-      assignment_id: learner.assignment_id,
-      avg: 2,
-    });
+    const averageScore = average(submissionScore, assignmentPossibleScore);
+    if (!includeId) {
+      log('new');
+      learnerData.push({
+        id: learner.learner_id,
+        avg: averageScore,
+        [assignmentID]: averageScore,
+      });
+    } else {
+      log('repeat');
+      learnerData.forEach((data) => {
+        if (data.id === leanerID) {
+          data[assignmentID] = averageScore;
+        }
+      });
+    }
   });
+
   return learnerData;
 }
 
