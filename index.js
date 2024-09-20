@@ -4,6 +4,8 @@
  */
 // Helper functions
 const log = console.log;
+//get the current date to determine if the assignment is due
+const currentData = new Date().toISOString().split('T')[0];
 //get the total score in percentage
 const average = (scores, total) => (total === 0 ? 0 : scores / total);
 // log(average(200, 400));
@@ -108,19 +110,39 @@ function getLearnerData(CourseInfo, AssignmentGroup, LearnerSubmissions) {
     const assignmentDueDate = AssignmentGroup.assignments.find(
       (assignment) => assignment.id === assignmentID
     ).due_at;
+    const late = submissionDate > assignmentDueDate;
+    const notYetDue = assignmentDueDate > currentData;
+
     const averageScore = average(submissionScore, assignmentPossibleScore);
+
+    //if the leaner is not in the learnerData, add the leanerID and the assignment score and average score
     if (!includeId) {
-      log('new');
-      learnerData.push({
-        id: learner.learner_id,
-        avg: averageScore,
-        [assignmentID]: averageScore,
-      });
+      //   log('new');
+      currentLearner.id = leanerID;
+      //  if the assignment is late, reduce the average score by 0.1
+      if (late) {
+        currentLearner[assignmentID] = averageScore - 0.1;
+      } else {
+        currentLearner[assignmentID] = averageScore;
+      }
+      //delete the assignment score if the assignment is not yet due
+      if (notYetDue) {
+        delete currentLearner[assignmentID];
+      }
+      currentLearner.avg = averageScore;
+      learnerData.push(currentLearner);
     } else {
-      log('repeat');
+      //if the leaner is already in the learnerData, update the assignment score and average score
       learnerData.forEach((data) => {
         if (data.id === leanerID) {
-          data[assignmentID] = averageScore;
+          if (late) {
+            data[assignmentID] = averageScore - 0.1;
+          } else {
+            data[assignmentID] = averageScore;
+          }
+          if (notYetDue) {
+            delete data[assignmentID];
+          }
         }
       });
     }
