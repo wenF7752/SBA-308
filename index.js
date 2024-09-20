@@ -91,13 +91,11 @@ const LearnerSubmissions = [
 function getLearnerData(CourseInfo, AssignmentGroup, LearnerSubmissions) {
   //   log(AssignmentGroup.assignments[0].points_possible);
   //get the learner ID
-  let learnerData = [];
+  let result = [];
 
   LearnerSubmissions.forEach((learner) => {
-    //check if the learner is already in the learnerData
-    const includeId = learnerData.some(
-      (data) => data.id === learner.learner_id
-    );
+    //check if the learner is already in the result
+    const includeId = result.some((data) => data.id === learner.learner_id);
     let currentLearner = {};
     //get all the data needed for the leaner
     const leanerID = learner.learner_id;
@@ -115,7 +113,7 @@ function getLearnerData(CourseInfo, AssignmentGroup, LearnerSubmissions) {
 
     const averageScore = average(submissionScore, assignmentPossibleScore);
 
-    //if the leaner is not in the learnerData, add the leanerID and the assignment score and average score
+    //if the leaner is not in the result, add the leanerID and the assignment score and average score
     if (!includeId) {
       //   log('new');
       currentLearner.id = leanerID;
@@ -130,10 +128,10 @@ function getLearnerData(CourseInfo, AssignmentGroup, LearnerSubmissions) {
         delete currentLearner[assignmentID];
       }
       currentLearner.avg = averageScore;
-      learnerData.push(currentLearner);
+      result.push(currentLearner);
     } else {
-      //if the leaner is already in the learnerData, update the assignment score and average score
-      learnerData.forEach((data) => {
+      //if the leaner is already in the result, update the assignment score and average score
+      result.forEach((data) => {
         if (data.id === leanerID) {
           if (late) {
             data[assignmentID] = averageScore - 0.1;
@@ -143,12 +141,29 @@ function getLearnerData(CourseInfo, AssignmentGroup, LearnerSubmissions) {
           if (notYetDue) {
             delete data[assignmentID];
           }
+          // Calculate the sum of all scores except 'id' and 'avg'
+          let totalSubmissionScore = 0;
+          let totalPossiblePoints = 0;
+          //loop through the AssignmentGroup to get the total submission score and total possible points
+          AssignmentGroup.assignments.forEach((assignment) => {
+            // if the assignment is submitted, meaning the assignment is not deleted (not yet due)
+            if (data[assignment.id] !== undefined) {
+              //get the total submission score by multiplying the assignment score in percentage (90% = 0.9) with the possible points
+              totalSubmissionScore +=
+                data[assignment.id] * assignment.points_possible;
+              //ang get the total possible points
+              totalPossiblePoints += assignment.points_possible;
+            }
+          });
+
+          // Update the average score
+          data.avg = average(totalSubmissionScore, totalPossiblePoints);
         }
       });
     }
   });
 
-  return learnerData;
+  return result;
 }
 
 log(getLearnerData(CourseInfo, AssignmentGroup, LearnerSubmissions));
