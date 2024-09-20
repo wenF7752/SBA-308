@@ -4,10 +4,11 @@
  */
 // Helper functions
 const log = console.log;
-//get the current date to determine if the assignment is due
-const currentData = new Date().toISOString().split('T')[0];
 //get the total score in percentage
 const average = (scores, total) => (total === 0 ? 0 : scores / total);
+//get the current date to determine if the assignment is due
+const currentData = new Date().toISOString().split('T')[0];
+
 // log(average(200, 400));
 // Dummy data
 // The provided course information.
@@ -89,6 +90,20 @@ const LearnerSubmissions = [
 ];
 
 function getLearnerData(CourseInfo, AssignmentGroup, LearnerSubmissions) {
+  //check if the argument is valid
+  try {
+    if (
+      typeof CourseInfo !== 'object' ||
+      typeof AssignmentGroup !== 'object' ||
+      !Array.isArray(LearnerSubmissions)
+    ) {
+      //if the argument is invalid, throw an error
+      throw new Error('Invalid argument types');
+    }
+  } catch (error) {
+    console.error(error.message);
+    return [];
+  }
   //   log(AssignmentGroup.assignments[0].points_possible);
   //get the learner ID
   let result = [];
@@ -145,16 +160,19 @@ function getLearnerData(CourseInfo, AssignmentGroup, LearnerSubmissions) {
           let totalSubmissionScore = 0;
           let totalPossiblePoints = 0;
           //loop through the AssignmentGroup to get the total submission score and total possible points
-          AssignmentGroup.assignments.forEach((assignment) => {
+          for (let i = 0; i < AssignmentGroup.assignments.length; i++) {
+            const assignment = AssignmentGroup.assignments[i];
             // if the assignment is submitted, meaning the assignment is not deleted (not yet due)
-            if (data[assignment.id] !== undefined) {
-              //get the total submission score by multiplying the assignment score in percentage (90% = 0.9) with the possible points
-              totalSubmissionScore +=
-                data[assignment.id] * assignment.points_possible;
-              //ang get the total possible points
-              totalPossiblePoints += assignment.points_possible;
+            if (data[assignment.id] === undefined) {
+              // Skip this iteration if the assignment is not yet due
+              continue;
             }
-          });
+            //get the total submission score by multiplying the assignment score in percentage (90% = 0.9) with the possible points
+            totalSubmissionScore +=
+              data[assignment.id] * assignment.points_possible;
+            //and get the total possible points
+            totalPossiblePoints += assignment.points_possible;
+          }
 
           // Update the average score
           data.avg = average(totalSubmissionScore, totalPossiblePoints);
