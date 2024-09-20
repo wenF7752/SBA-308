@@ -109,20 +109,78 @@ function getLearnerData(CourseInfo, AssignmentGroup, LearnerSubmissions) {
   let result = [];
 
   LearnerSubmissions.forEach((learner) => {
+    //create an object to store the current learner data
+    let currentLearner = {};
+    //check if the learner submission data is valid
+    try {
+      if (
+        typeof learner.learner_id !== 'number' ||
+        typeof learner.assignment_id !== 'number' ||
+        typeof learner.submission !== 'object' ||
+        typeof learner.submission.submitted_at !== 'string' ||
+        typeof learner.submission.score !== 'number'
+      ) {
+        throw new Error('Invalid learner submission data');
+      }
+    } catch (error) {
+      console.error(error.message);
+      return;
+    }
+    // Validate AssignmentGroup properties
+    try {
+      if (
+        typeof AssignmentGroup.id !== 'number' ||
+        typeof AssignmentGroup.name !== 'string' ||
+        typeof AssignmentGroup.course_id !== 'number' ||
+        typeof AssignmentGroup.group_weight !== 'number' ||
+        !Array.isArray(AssignmentGroup.assignments)
+      ) {
+        throw new Error('Invalid AssignmentGroup properties');
+      }
+
+      AssignmentGroup.assignments.forEach((assignment) => {
+        if (
+          typeof assignment.id !== 'number' ||
+          typeof assignment.name !== 'string' ||
+          typeof assignment.due_at !== 'string' ||
+          typeof assignment.points_possible !== 'number' ||
+          assignment.points_possible <= 0
+        ) {
+          throw new Error('Invalid assignment properties in AssignmentGroup');
+        }
+      });
+    } catch (error) {
+      console.error(error.message);
+      return [];
+    }
     //check if the learner is already in the result
     const includeId = result.some((data) => data.id === learner.learner_id);
-    let currentLearner = {};
+
     //get all the data needed for the leaner
     const leanerID = learner.learner_id;
     const assignmentID = learner.assignment_id;
     const submissionScore = learner.submission.score;
-    const assignmentPossibleScore = AssignmentGroup.assignments.find(
-      (assignment) => assignment.id === assignmentID
-    ).points_possible;
+    let assignmentPossibleScore, assignmentDueDate;
+    //try to get the assignment possible score and due date, handle the error if the assignment id is not found
+    try {
+      //if no assignment is found, assignment will be undefined
+      const assignment = AssignmentGroup.assignments.find(
+        (assignment) => assignment.id === assignmentID
+      );
+      if (!assignment) {
+        //if assignment is undefined, meaning not found, throw an error
+        throw new Error(
+          `Assignment with ID ${assignmentID} not found in AssignmentGroup`
+        );
+      }
+      //if the assignment is found, get the possible score and due date
+      assignmentPossibleScore = assignment.points_possible;
+      assignmentDueDate = assignment.due_at;
+    } catch (error) {
+      console.error(error.message);
+      return;
+    }
     const submissionDate = learner.submission.submitted_at;
-    const assignmentDueDate = AssignmentGroup.assignments.find(
-      (assignment) => assignment.id === assignmentID
-    ).due_at;
     const late = submissionDate > assignmentDueDate;
     const notYetDue = assignmentDueDate > currentData;
 
